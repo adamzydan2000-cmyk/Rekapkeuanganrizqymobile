@@ -48,7 +48,6 @@
             <select id="uIn" style="color: #818cf8; font-weight: bold;">
                 <option>Adam</option><option>Mas Rifai</option><option>Mas Fajar</option><option>Mas Satria</option><option>Mas Ali</option>
             </select>
-            
             <div class="flex">
                 <select id="tipeCust" style="flex:0.8" onchange="toggleCustInput()">
                     <option value="Orang">👤 Orang</option>
@@ -56,17 +55,14 @@
                 </select>
                 <input type="number" id="valCust" placeholder="Jml Orang" style="flex:1" value="1">
             </div>
-
             <div class="flex">
                 <select id="tIn" style="flex:1" onchange="logicForm()"><option value="HP">📱 HP</option><option value="ACC">🎧 ACC</option></select>
                 <select id="bIn" style="flex:1"><option>Oppo</option><option>Realme</option><option>Vivo</option><option>Samsung</option><option>Xiaomi</option><option>Infinix</option><option>Nokia</option><option>Other</option></select>
             </div>
-            
             <div id="divHP">
                 <input type="text" id="namaHP" placeholder="Tipe HP">
                 <label style="font-size: 12px; display: block; margin-bottom: 10px; color:#bbb;"><input type="checkbox" id="cekAcc" onchange="logicForm()"> + Aksesoris?</label>
             </div>
-
             <div id="divAcc" class="hidden" style="background: #252525; padding: 10px; border: 1px dashed #4f46e5; border-radius: 8px; margin-bottom: 10px;">
                 <div id="accCont">
                     <div class="flex acc-row" style="margin-bottom:5px;">
@@ -76,7 +72,6 @@
                 </div>
                 <button onclick="tambahBaris()" type="button" style="width:100%; font-size:10px; padding:8px; background:none; border:1px solid #444; color:#aaa; border-radius:5px;">+ TAMBAH BARIS</button>
             </div>
-
             <div class="pay-box">
                 <span class="pay-label">Metode Pembayaran</span>
                 <div id="payCont">
@@ -92,11 +87,9 @@
                 </div>
                 <button onclick="tambahPayment()" type="button" style="width:100%; font-size:10px; padding:8px; background:none; border:1px solid #444; color:#818cf8; border-radius:5px; margin-top:5px;">+ SPLIT PAYMENT</button>
             </div>
-
             <button onclick="saveRekap()" class="btn btn-blue">SIMPAN TRANSAKSI</button>
             <button onclick="salinRekapTeks()" class="btn btn-dark" style="font-size: 11px;">📋 SALIN DATA REKAP</button>
         </div>
-        
         <div id="bannerTotal" class="total-banner hidden">TOTAL PEMASUKAN: Rp 0</div>
         <div id="listRekap"></div>
     </div>
@@ -125,13 +118,11 @@
                 <input type="number" id="r-aks-n" class="rep-input" oninput="hitung()">
                 <input type="number" id="r-aks-t" class="rep-input rep-total" readonly oninput="manualUpdate('aks', this.value)">
             </div>
-            
             <div class="rep-row" style="background:#1e293b; padding:5px; border-radius:5px;">
                 <div class="rep-label" style="color:#818cf8;">ALL BRAND</div>
                 <input type="number" id="r-all-n" class="rep-input rep-total" style="background:#111 !important;" readonly>
                 <input type="number" id="r-all-t" class="rep-input rep-total" readonly>
             </div>
-
             <div class="flex" style="margin-top:10px;">
                 <div style="flex:1"><small>Walk In</small><input type="number" id="wi-n" oninput="hitung()"></div>
                 <div style="flex:1"><small>Total WI</small><input type="number" id="wi-t" class="rep-total" readonly oninput="manualUpdate('wi', this.value)"></div>
@@ -163,11 +154,9 @@
                     <input type="number" id="omsB-total" class="rep-input rep-total" readonly oninput="manualUpdateOmsTotal(this.value)">
                 </div>
             </div>
-
             <button onclick="preview()" class="btn btn-blue" style="margin-top: 15px;">PREVIEW LAPORAN</button>
             <div id="boxPrev" class="hidden" style="background:#fff; color:#000; padding:10px; font-family:monospace; font-size:11px; margin-top:10px; white-space:pre-wrap;"></div>
             <button onclick="copyWA()" class="btn btn-green">SALIN WA</button>
-
             <div class="flex" style="margin-top: 20px;">
                 <button onclick="resetHarian()" class="btn btn-red" style="flex:1; font-size:10px;">🗑️ RESET HARIAN</button>
                 <button onclick="resetBulanan()" class="btn btn-orange" style="flex:1; font-size:10px;">⚠️ RESET BULANAN</button>
@@ -178,7 +167,7 @@
     <div id="navbar">
         <button class="nav-item active" onclick="tab('tab-rekap', this)"><span>📝</span>Rekap</button>
         <button class="nav-item" onclick="tab('tab-out', this)"><span>📤</span>Out</button>
-        <button class="nav-item" onclick="tab('tab-report', this)"><span>📊</span>Report</button>
+        <button class="nav-item" onclick="tab('tab-report', this)"><span>📊</span>Rekap Harian</button>
     </div>
 
     <script>
@@ -189,11 +178,8 @@
         function toggleCustInput() {
             const tipe = document.getElementById('tipeCust').value;
             const input = document.getElementById('valCust');
-            if(tipe === 'COD') {
-                input.value = ""; input.placeholder = "Keterangan COD"; input.type = "text";
-            } else {
-                input.value = "1"; input.placeholder = "Jml Orang"; input.type = "number";
-            }
+            if(tipe === 'COD') { input.value = ""; input.placeholder = "Keterangan COD"; input.type = "text"; } 
+            else { input.value = "1"; input.placeholder = "Jml Orang"; input.type = "number"; }
         }
 
         function tab(id, el) {
@@ -258,12 +244,26 @@
                 return `<div class="list-box"><div class="del-x" onclick="delR(${i})">✕</div><b>${x.u} | ${x.b}</b> <span style="font-size:10px; background:#444; padding:2px 5px; border-radius:4px;">${x.c}</span><br><small>${x.i}</small><br><small style="color:#818cf8">${x.p}</small><br><b style="color:#34d399;">Rp ${x.v.toLocaleString()}</b></div>`;
             }).reverse().join('');
             const banner = document.getElementById('bannerTotal');
-            if(list.length > 0) {
-                banner.innerText = `TOTAL PEMASUKAN: Rp ${totalPemasukan.toLocaleString()}`;
-                banner.classList.remove('hidden');
-            } else { banner.classList.add('hidden'); }
+            if(list.length > 0) { banner.innerText = `TOTAL PEMASUKAN: Rp ${totalPemasukan.toLocaleString()}`; banner.classList.remove('hidden'); } 
+            else { banner.classList.add('hidden'); }
             const omsHInput = document.getElementById('omsH');
             if (omsHInput) { omsHInput.value = totalPemasukan; hitung(); }
+        }
+
+        function salinRekapTeks() {
+            try {
+                const list = JSON.parse(localStorage.getItem('RZ_L_REKAP')) || [];
+                if (list.length === 0) return alert("Data kosong.");
+                let total = 0;
+                let teks = `*REKAP PENJUALAN RIZQY MOBILE*\nTanggal: ${new Date().toLocaleDateString('id-ID')}\n----------------------------\n\n`;
+                list.forEach((x, i) => {
+                    total += x.v;
+                    teks += `${i + 1}. *${x.u} | ${x.b}*\n   Detail: ${x.i}\n   Cust: ${x.c}\n   Bayar: ${x.p}\n   Rp ${x.v.toLocaleString()}\n\n`;
+                });
+                teks += `----------------------------\n*TOTAL: Rp ${total.toLocaleString()}*`;
+                const el = document.createElement('textarea'); el.value = teks; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+                alert("Berhasil disalin!");
+            } catch (e) { alert("Gagal menyalin."); }
         }
 
         function delR(i) { if(confirm("Hapus?")) { let list = JSON.parse(localStorage.getItem('RZ_L_REKAP')); list.splice(i,1); localStorage.setItem('RZ_L_REKAP', JSON.stringify(list)); showRekap(); } }
@@ -318,32 +318,21 @@
             document.getElementById('omsB-total').value = omsBBase + g('omsH');
         }
 
-        // --- FUNGSI RESET ---
-
         function resetHarian() {
-            if(confirm("⚠ RESET HARIAN akan menghapus:\n1. Daftar Rekap Penjualan hari ini\n2. Daftar Pengeluaran hari ini\n3. Input Brand Harian\n\nLanjutkan?")) {
-                localStorage.removeItem('RZ_L_REKAP');
-                localStorage.removeItem('RZ_L_OUT');
-                
-                // Reset input harian di layar
-                const inputs = document.querySelectorAll('.rep-input');
-                inputs.forEach(i => { if(i.id.endsWith('-n')) i.value = ''; });
-                document.getElementById('wi-n').value = '';
-                document.getElementById('tr-n').value = '';
-                document.getElementById('bca').value = '';
-                document.getElementById('adm').value = '';
-                
+            if(confirm("⚠ RESET HARIAN?")) {
+                localStorage.removeItem('RZ_L_REKAP'); localStorage.removeItem('RZ_L_OUT');
+                document.querySelectorAll('input').forEach(i => { if(i.id.endsWith('-n') || ['wi-n', 'tr-n', 'bca', 'adm'].includes(i.id)) i.value = ''; });
                 showRekap(); showOut(); hitung();
-                alert("Data Harian Berhasil Direset!");
+                alert("Berhasil!");
             }
         }
 
         function resetBulanan() {
-            if(confirm("🚨 PERINGATAN: RESET BULANAN akan menghapus akumulasi angka unit brand dan omset bulanan dari database.\n\nData ini tidak bisa dikembalikan. Lanjutkan?")) {
+            if(confirm("🚨 RESET BULANAN?")) {
                 db = {oms:0, aks:0, wi:0, allb:0};
                 localStorage.setItem('RZ_FINAL_DB', JSON.stringify(db));
                 renderReport();
-                alert("Database Bulanan Berhasil Direset!");
+                alert("Database Bulanan Direset!");
             }
         }
 
