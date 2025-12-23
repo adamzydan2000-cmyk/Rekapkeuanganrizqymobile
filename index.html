@@ -22,6 +22,7 @@
         .btn-green { background: #10b981; }
         .btn-red { background: #ef4444; }
         .btn-dark { background: #2d3748; }
+        .btn-orange { background: #f59e0b; }
         .rep-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
         .rep-label { flex: 1.5; font-size: 12px; font-weight: bold; color: #bbb; }
         .rep-input { flex: 1; margin-bottom: 0 !important; padding: 8px !important; }
@@ -31,9 +32,10 @@
         .flex { display: flex; gap: 8px; }
         .hidden { display: none; }
         .btn-del-row { background: #ef4444; border: none; color: white; border-radius: 5px; padding: 0 10px; font-weight: bold; cursor: pointer; }
+        .editable-mode { background: #2d3748 !important; border: 1px solid #818cf8 !important; }
         .pay-box { background: #1a1a1a; padding: 10px; border-radius: 8px; border: 1px solid #333; margin-bottom: 10px; }
         .pay-label { font-size: 10px; color: #888; display: block; margin-bottom: 5px; text-transform: uppercase; }
-        .total-banner { background: #10b981; color: white; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 15px; font-size: 16px; border: 1px solid #059669; }
+        .total-banner { background: #10b981; color: white; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 15px; font-size: 16px; border: 1px solid #059669; }
     </style>
 </head>
 <body>
@@ -68,7 +70,7 @@
             <div id="divAcc" class="hidden" style="background: #252525; padding: 10px; border: 1px dashed #4f46e5; border-radius: 8px; margin-bottom: 10px;">
                 <div id="accCont">
                     <div class="flex acc-row" style="margin-bottom:5px;">
-                        <input type="number" class="akode" placeholder="Kd" style="flex:0.4">
+                        <input type="number" class="akode" placeholder="Kd (4)" oninput="if(this.value.length > 4) this.value = this.value.slice(0,4);" style="flex:0.4">
                         <input type="text" class="anama" placeholder="Nama Barang" style="flex:1">
                     </div>
                 </div>
@@ -92,10 +94,10 @@
             </div>
 
             <button onclick="saveRekap()" class="btn btn-blue">SIMPAN TRANSAKSI</button>
-            <button onclick="exportExcel()" class="btn btn-dark" style="font-size: 11px;">📊 DOWNLOAD DATA (.CSV)</button>
+            <button onclick="salinRekapTeks()" class="btn btn-dark" style="font-size: 11px;">📋 SALIN DATA REKAP</button>
         </div>
         
-        <div id="bannerTotal" class="total-banner hidden">TOTAL: Rp 0</div>
+        <div id="bannerTotal" class="total-banner hidden">TOTAL PEMASUKAN: Rp 0</div>
         <div id="listRekap"></div>
     </div>
 
@@ -112,11 +114,64 @@
         <div class="card">
             <h3 style="text-align: center; margin-top: 0; color: #818cf8; font-size: 16px;">REKAP HARIAN</h3>
             <input type="date" id="tglRep" style="font-weight: bold;">
+            <label style="display: block; text-align: center; font-size: 11px; margin-bottom: 15px; color: #f59e0b;">
+                <input type="checkbox" id="modeEdit" onchange="toggleEditBulanan()"> 🔓 AKTIFKAN EDIT BULANAN
+            </label>
             <div id="brandArea"></div>
-            <div id="othArea"></div>
+            <div id="othArea" style="border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;"></div>
+            
+            <div class="rep-row" style="margin-top:10px;">
+                <div class="rep-label">Aksesoris</div>
+                <input type="number" id="r-aks-n" class="rep-input" oninput="hitung()">
+                <input type="number" id="r-aks-t" class="rep-input rep-total" readonly oninput="manualUpdate('aks', this.value)">
+            </div>
+            
+            <div class="rep-row" style="background:#1e293b; padding:5px; border-radius:5px;">
+                <div class="rep-label" style="color:#818cf8;">ALL BRAND</div>
+                <input type="number" id="r-all-n" class="rep-input rep-total" style="background:#111 !important;" readonly>
+                <input type="number" id="r-all-t" class="rep-input rep-total" readonly>
+            </div>
+
+            <div class="flex" style="margin-top:10px;">
+                <div style="flex:1"><small>Walk In</small><input type="number" id="wi-n" oninput="hitung()"></div>
+                <div style="flex:1"><small>Total WI</small><input type="number" id="wi-t" class="rep-total" readonly oninput="manualUpdate('wi', this.value)"></div>
+            </div>
+            <div class="flex">
+                <div style="flex:1"><small>Transaksi</small><input type="number" id="tr-n" oninput="hitung()"></div>
+                <div style="flex:1"><small>% Trx</small><input type="text" id="tr-p" class="rep-total" readonly></div>
+            </div>
+
+            <div style="background: #064e3b; padding: 12px; border-radius: 8px; border: 1px solid #059669; margin-top: 15px;">
+                <small>OMSET HARI INI</small>
+                <input type="number" id="omsH" oninput="hitung()">
+                <div class="flex">
+                    <div style="flex:1"><small>BCA</small><input type="number" id="bca" oninput="hitung()"></div>
+                    <div style="flex:1"><small>ADM</small><input type="number" id="adm" oninput="hitung()"></div>
+                </div>
+                <div id="txtDeb" style="text-align:center; font-weight:bold; font-size:12px; margin:5px 0;">Debit: 0</div>
+                <div class="flex">
+                    <div style="flex:1; text-align:center;"><small>TUNAI</small><input type="text" id="vTunai" readonly></div>
+                    <div style="flex:1; text-align:center;"><small style="color:#f87171;">OUT</small><input type="text" id="vOut" readonly style="color:#f87171;"></div>
+                </div>
+                <input type="text" id="vSisa" readonly style="font-size:18px; font-weight:bold; color:#34d399; margin-top:5px; border:1px solid #34d399;" placeholder="SISA TUNAI">
+            </div>
+
+            <div style="background: #431407; padding: 12px; border-radius: 8px; border: 1px solid #9a3412; margin-top: 10px;">
+                <small>OMSET BULANAN</small>
+                <div class="flex">
+                    <input type="number" id="omsB-in" oninput="hitung()" class="rep-input" placeholder="Base Omset">
+                    <input type="number" id="omsB-total" class="rep-input rep-total" readonly oninput="manualUpdateOmsTotal(this.value)">
+                </div>
+            </div>
+
             <button onclick="preview()" class="btn btn-blue" style="margin-top: 15px;">PREVIEW LAPORAN</button>
             <div id="boxPrev" class="hidden" style="background:#fff; color:#000; padding:10px; font-family:monospace; font-size:11px; margin-top:10px; white-space:pre-wrap;"></div>
             <button onclick="copyWA()" class="btn btn-green">SALIN WA</button>
+
+            <div class="flex" style="margin-top: 20px;">
+                <button onclick="resetHarian()" class="btn btn-red" style="flex:1; font-size:10px;">🗑️ RESET HARIAN</button>
+                <button onclick="resetBulanan()" class="btn btn-orange" style="flex:1; font-size:10px;">⚠️ RESET BULANAN</button>
+            </div>
         </div>
     </div>
 
@@ -129,12 +184,13 @@
     <script>
         const B = [{id:'op',n:'Oppo',t:70},{id:'rm',n:'Realme',t:50},{id:'vv',n:'Vivo',t:20},{id:'ss',n:'Samsung',t:100},{id:'xi',n:'Xiaomi',t:45},{id:'if',n:'Infinix',t:30}];
         const O = [{id:'nk',n:'Nokia'},{id:'ot',n:'Other'},{id:'sc',n:'Second'},{id:'sp',n:'Sepeda'}];
-        
+        let db = JSON.parse(localStorage.getItem('RZ_FINAL_DB')) || {oms:0, aks:0, wi:0, allb:0};
+
         function toggleCustInput() {
             const tipe = document.getElementById('tipeCust').value;
             const input = document.getElementById('valCust');
             if(tipe === 'COD') {
-                input.value = ""; input.placeholder = "Ket COD"; input.type = "text";
+                input.value = ""; input.placeholder = "Keterangan COD"; input.type = "text";
             } else {
                 input.value = "1"; input.placeholder = "Jml Orang"; input.type = "number";
             }
@@ -145,6 +201,7 @@
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             el.classList.add('active');
+            if(id === 'tab-report') renderReport();
         }
 
         function logicForm() {
@@ -174,91 +231,50 @@
             const methods = document.querySelectorAll('.pmeth');
             const amounts = document.querySelectorAll('.pnom');
             let totalV = 0; let payDetails = [];
-
             amounts.forEach((el, idx) => {
                 let v = parseInt(el.value || 0);
-                if(v > 0) { totalV += v; payDetails.push(`${methods[idx].value}: ${v}`); }
+                if(v > 0) { totalV += v; payDetails.push(`${methods[idx].value}: ${v.toLocaleString()}`); }
             });
-
-            if(totalV <= 0) return alert("Isi nominal!");
-
+            if(totalV <= 0) return alert("Isi nominal pembayaran!");
             const kodes = document.querySelectorAll('.akode');
             const namas = document.querySelectorAll('.anama');
             let accs = [];
             namas.forEach((el, idx) => { if(el.value) accs.push(`${el.value} [${kodes[idx].value || '-'}]`); });
-            
             let detail = document.getElementById('tIn').value === 'HP' ? document.getElementById('namaHP').value : "";
             const list = JSON.parse(localStorage.getItem('RZ_L_REKAP')) || [];
-            list.push({ 
-                u: document.getElementById('uIn').value, 
-                c: `${tipeC}: ${valC}`,
-                b: document.getElementById('tIn').value === 'ACC' ? 'Aksesoris' : document.getElementById('bIn').value, 
-                i: detail + (accs.length > 0 ? (detail ? " + " : "") + accs.join(", ") : ""), 
-                v: totalV,
-                p: payDetails.join(" | ")
-            });
-            
+            list.push({ u: document.getElementById('uIn').value, c: `${tipeC}: ${valC}`, b: document.getElementById('tIn').value === 'ACC' ? 'Aksesoris' : document.getElementById('bIn').value, i: detail + (accs.length > 0 ? (detail ? " + " : "") + accs.join(", ") : ""), v: totalV, p: payDetails.join(" | ") });
             localStorage.setItem('RZ_L_REKAP', JSON.stringify(list));
             alert("Berhasil!");
+            document.getElementById('namaHP').value = '';
+            document.querySelectorAll('.pnom').forEach(el => el.value = '');
             showRekap();
         }
 
         function showRekap() {
             const list = JSON.parse(localStorage.getItem('RZ_L_REKAP')) || [];
-            let total = 0;
-            document.getElementById('listRekap').innerHTML = list.map((x,i)=> {
-                total += x.v;
+            let totalPemasukan = 0;
+            document.getElementById('listRekap').innerHTML = list.map((x,i)=>{
+                totalPemasukan += x.v;
                 return `<div class="list-box"><div class="del-x" onclick="delR(${i})">✕</div><b>${x.u} | ${x.b}</b> <span style="font-size:10px; background:#444; padding:2px 5px; border-radius:4px;">${x.c}</span><br><small>${x.i}</small><br><small style="color:#818cf8">${x.p}</small><br><b style="color:#34d399;">Rp ${x.v.toLocaleString()}</b></div>`;
             }).reverse().join('');
-            
             const banner = document.getElementById('bannerTotal');
             if(list.length > 0) {
-                banner.innerText = `TOTAL PEMASUKAN: Rp ${total.toLocaleString()}`;
+                banner.innerText = `TOTAL PEMASUKAN: Rp ${totalPemasukan.toLocaleString()}`;
                 banner.classList.remove('hidden');
             } else { banner.classList.add('hidden'); }
+            const omsHInput = document.getElementById('omsH');
+            if (omsHInput) { omsHInput.value = totalPemasukan; hitung(); }
         }
 
         function delR(i) { if(confirm("Hapus?")) { let list = JSON.parse(localStorage.getItem('RZ_L_REKAP')); list.splice(i,1); localStorage.setItem('RZ_L_REKAP', JSON.stringify(list)); showRekap(); } }
 
-        // FUNGSI DOWNLOAD BARU (LEBIH KUAT)
-        function exportExcel() {
-            const list = JSON.parse(localStorage.getItem('RZ_L_REKAP')) || [];
-            if(list.length === 0) return alert("Data kosong!");
-
-            let csvContent = "\uFEFF"; // BOM untuk Excel agar tidak berantakan
-            csvContent += "User,Customer,Brand,Detail,Pembayaran,Total\n";
-
-            list.forEach(x => {
-                let row = [
-                    x.u,
-                    x.c,
-                    x.b,
-                    `"${x.i.replace(/"/g, '""')}"`,
-                    `"${x.p.replace(/"/g, '""')}"`,
-                    x.v
-                ].join(",");
-                csvContent += row + "\n";
-            });
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            
-            const date = new Date().toISOString().slice(0,10);
-            link.setAttribute("href", url);
-            link.setAttribute("download", `Rekap_Rizqy_${date}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
         function saveOut() {
             const n = document.getElementById('oKet').value; const v = parseInt(document.getElementById('oNom').value || 0);
-            if(!n || v <= 0) return alert("Lengkapi!");
+            if(!n || v <= 0) return alert("Lengkapi data!");
             const list = JSON.parse(localStorage.getItem('RZ_L_OUT')) || [];
             list.push({n, v}); localStorage.setItem('RZ_L_OUT', JSON.stringify(list));
-            showOut();
+            document.getElementById('oKet').value = ''; document.getElementById('oNom').value = '';
+            showOut(); alert("Berhasil!"); hitung();
         }
 
         function showOut() {
@@ -266,7 +282,98 @@
             document.getElementById('listOut').innerHTML = list.map((x,i)=>`<div class="list-box" style="border-left-color:red;"><div class="del-x" onclick="delO(${i})">✕</div><b>${x.n}</b><br><b style="color:#f87171;">Rp ${x.v.toLocaleString()}</b></div>`).reverse().join('');
         }
 
-        function delO(i) { if(confirm("Hapus?")) { let list = JSON.parse(localStorage.getItem('RZ_L_OUT')); list.splice(i,1); localStorage.setItem('RZ_L_OUT', JSON.stringify(list)); showOut(); } }
+        function delO(i) { if(confirm("Hapus?")) { let list = JSON.parse(localStorage.getItem('RZ_L_OUT')); list.splice(i,1); localStorage.setItem('RZ_L_OUT', JSON.stringify(list)); showOut(); hitung(); } }
+
+        function renderReport() {
+            document.getElementById('tglRep').value = new Date().toISOString().slice(0,10);
+            document.getElementById('brandArea').innerHTML = B.map(x => `<div class="rep-row"><div class="rep-label">${x.n}</div><input type="number" id="${x.id}-n" class="rep-input" oninput="hitung()"><input type="number" id="${x.id}-t" class="rep-input rep-total" value="${db[x.id]||0}" readonly oninput="manualUpdate('${x.id}', this.value)"><div class="rep-target">${x.t}</div></div>`).join('');
+            document.getElementById('othArea').innerHTML = O.map(x => `<div class="rep-row"><div class="rep-label">${x.n}</div><input type="number" id="${x.id}-n" class="rep-input" oninput="hitung()"><input type="number" id="${x.id}-t" class="rep-input rep-total" value="${db[x.id]||0}" readonly oninput="manualUpdate('${x.id}', this.value)"><div class="rep-target"></div></div>`).join('');
+            document.getElementById('r-aks-t').value = db.aks || 0;
+            document.getElementById('r-all-t').value = db.allb || 0;
+            document.getElementById('wi-t').value = db.wi || 0;
+            document.getElementById('omsB-in').value = db.oms || 0;
+            const list = JSON.parse(localStorage.getItem('RZ_L_REKAP')) || [];
+            document.getElementById('omsH').value = list.reduce((a, b) => a + b.v, 0);
+            hitung();
+        }
+
+        function hitung() {
+            const g = (id) => { const el = document.getElementById(id); return el ? parseInt(el.value || 0) : 0; };
+            let totalAllBrandIn = 0;
+            B.forEach(x => { const valN = g(x.id+'-n'); totalAllBrandIn += valN; document.getElementById(x.id+'-t').value = (db[x.id]||0) + valN; });
+            if(document.getElementById('r-all-n')) document.getElementById('r-all-n').value = totalAllBrandIn;
+            O.forEach(x => { if(document.getElementById(x.id+'-t')) document.getElementById(x.id+'-t').value = (db[x.id]||0) + g(x.id+'-n'); });
+            document.getElementById('r-aks-t').value = (db.aks || 0) + g('r-aks-n');
+            document.getElementById('r-all-t').value = (db.allb || 0) + totalAllBrandIn;
+            document.getElementById('wi-t').value = (db.wi || 0) + g('wi-n');
+            document.getElementById('tr-p').value = g('wi-n') > 0 ? Math.round((g('tr-n')/g('wi-n'))*100)+"%" : "0%";
+            const deb = g('bca') + g('adm');
+            if(document.getElementById('txtDeb')) document.getElementById('txtDeb').innerText = "Debit: Rp " + deb.toLocaleString();
+            const outV = (JSON.parse(localStorage.getItem('RZ_L_OUT'))||[]).reduce((a,b)=>a+b.v, 0);
+            const tunai = g('omsH') - deb;
+            document.getElementById('vTunai').value = tunai.toLocaleString();
+            document.getElementById('vOut').value = outV.toLocaleString();
+            document.getElementById('vSisa').value = (tunai - outV).toLocaleString();
+            const omsBBase = document.getElementById('modeEdit').checked ? g('omsB-in') : (db.oms || 0);
+            document.getElementById('omsB-total').value = omsBBase + g('omsH');
+        }
+
+        // --- FUNGSI RESET ---
+
+        function resetHarian() {
+            if(confirm("⚠ RESET HARIAN akan menghapus:\n1. Daftar Rekap Penjualan hari ini\n2. Daftar Pengeluaran hari ini\n3. Input Brand Harian\n\nLanjutkan?")) {
+                localStorage.removeItem('RZ_L_REKAP');
+                localStorage.removeItem('RZ_L_OUT');
+                
+                // Reset input harian di layar
+                const inputs = document.querySelectorAll('.rep-input');
+                inputs.forEach(i => { if(i.id.endsWith('-n')) i.value = ''; });
+                document.getElementById('wi-n').value = '';
+                document.getElementById('tr-n').value = '';
+                document.getElementById('bca').value = '';
+                document.getElementById('adm').value = '';
+                
+                showRekap(); showOut(); hitung();
+                alert("Data Harian Berhasil Direset!");
+            }
+        }
+
+        function resetBulanan() {
+            if(confirm("🚨 PERINGATAN: RESET BULANAN akan menghapus akumulasi angka unit brand dan omset bulanan dari database.\n\nData ini tidak bisa dikembalikan. Lanjutkan?")) {
+                db = {oms:0, aks:0, wi:0, allb:0};
+                localStorage.setItem('RZ_FINAL_DB', JSON.stringify(db));
+                renderReport();
+                alert("Database Bulanan Berhasil Direset!");
+            }
+        }
+
+        function manualUpdate(id, val) { if(document.getElementById('modeEdit').checked) { db[id] = parseInt(val || 0); localStorage.setItem('RZ_FINAL_DB', JSON.stringify(db)); hitung(); } }
+        function manualUpdateOmsTotal(val) { if(document.getElementById('modeEdit').checked) { db.oms = parseInt(val || 0) - parseInt(document.getElementById('omsH').value || 0); localStorage.setItem('RZ_FINAL_DB', JSON.stringify(db)); } }
+
+        function preview() {
+            const g = (id) => document.getElementById(id).value || 0;
+            const format = (v) => parseInt(v).toLocaleString();
+            let s = `Sell out toko GKB ${new Date(document.getElementById('tglRep').value).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}\n\nFokuskan brand\n`;
+            B.forEach((x,i) => {
+                const h = g(x.id+'-n'); const t = g(x.id+'-t');
+                s += `${x.n} : ${h}.${t}.${x.t} (${Math.round((t/x.t)*100)||0}%)\n`;
+                if(i === 2) s += `\n`;
+            });
+            s += `Nokia : ${g('nk-n')}.${g('nk-t')}\n\nOther : ${g('ot-n')}.${g('ot-t')}\nHP Second : ${g('sc-n')}.${g('sc-t')}\n\nSepeda : ${g('sp-n')}.${g('sp-t')}\n`;
+            s += `Aksesoris : ${g('r-aks-n')}.${g('r-aks-t')}\nAll Brand : ${g('r-all-n')}.${g('r-all-t')}\n\n`;
+            s += `Walk in : ${g('wi-n')}(${g('wi-t')})\nTransaksi : ${g('tr-n')}(${document.getElementById('tr-p').value})\n\n`;
+            const deb = parseInt(g('bca')) + parseInt(g('adm')); const outV = (JSON.parse(localStorage.getItem('RZ_L_OUT'))||[]).reduce((a,b)=>a+b.v, 0);
+            s += `*tunai : ${format(g('omsH')-deb)}\n\n*debit : ${format(deb)}\n- bca ${format(g('bca'))}\n- bca admin ${format(g('adm'))}\n\n*pengeluaran : ${format(outV)}\n*sisa tunai : ${format(g('omsH')-deb-outV)}\n\nPencapaian omset : ${format(g('omsB-total'))}`;
+            document.getElementById('boxPrev').innerText = s; document.getElementById('boxPrev').classList.remove('hidden');
+        }
+
+        function toggleEditBulanan() {
+            const isEdit = document.getElementById('modeEdit').checked;
+            document.querySelectorAll('.rep-total').forEach(el => { if (el.id !== 'r-all-t' && el.id !== 'tr-p') { el.readOnly = !isEdit; el.classList.toggle('editable-mode', isEdit); } });
+            document.getElementById('omsB-in').readOnly = !isEdit;
+        }
+
+        function copyWA() { navigator.clipboard.writeText(document.getElementById('boxPrev').innerText); alert("Disalin!"); }
 
         window.onload = () => { showRekap(); showOut(); logicForm(); };
     </script>
